@@ -9,22 +9,29 @@ class WindyGridworld():
     #action space
     A = np.array([up, down, right, left])
 
-    def __init__(self, num_concepts, method, knn, means, policy_model) -> None:
+    def __init__(self, num_concepts, method, knn, means, policy_model=None, custom_policy=None, *policy_args) -> None:
         self.num_concepts = num_concepts
         self.method = method #simple or knn to dictate how clusters are assigned
         self.knn = knn #A knn predictor already trained
         self.means = means
         self.policy_model = policy_model
+        self.custom_policy = custom_policy
+        self.policy_args = policy_args
 
     def _policy(self, s):
-        if self.policy_model is None:
-            indices = [0, 1, 2, 3]
-            # higher probability of moving up and right
-            return self.A[np.random.choice(indices, 1, p=[0.35, 0.15, 0.35, 0.15])[0]]
-        else:
+        if self.policy_model is not None:
             s = s.reshape((1,2))
             action_index = np.argmax(self.policy_model.predict(s)) #predict actions using pi_b
             return self.A[action_index] 
+            
+        elif self.custom_policy is not None:
+            return self.custom_policy(s, self.A, *self.policy_args)
+
+        else:
+            indices = [0, 1, 2, 3]
+            # higher probability of moving up and right
+            return self.A[np.random.choice(indices, 1, p=[0.35, 0.15, 0.35, 0.15])[0]]
+            
 
 
     def _reached_goal(self, s):
@@ -43,7 +50,6 @@ class WindyGridworld():
         return severities[assigned_cluster]*np.array([-1, -1]), assigned_cluster
 
     def _wind_knn(self, s):
-    
         severities = [0.1, 0.3, 0.5, 0.7, 0.9]  # Wind severity per cluster
         assigned_cluster = self.knn.predict(s.reshape(1,2))[0]
     
