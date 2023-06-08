@@ -1,4 +1,6 @@
 import numpy as np
+import matplotlib.pyplot as plt
+import matplotlib.patches as patches
 
 class WindyGridworld():
     up = [0, 1]
@@ -18,21 +20,20 @@ class WindyGridworld():
         self.custom_policy = custom_policy
         self.policy_args = policy_args
 
-    def _policy(self, s):
+    def _policy(self, s, history):
         if self.policy_model is not None:
             s = s.reshape((1,2))
             action_index = np.argmax(self.policy_model.predict(s)) #predict actions using pi_b
             return self.A[action_index] 
             
         elif self.custom_policy is not None:
-            return self.custom_policy(s, self.A, *self.policy_args)
+            return self.custom_policy(s, self.A, history, *self.policy_args)
 
         else:
             indices = [0, 1, 2, 3]
             # higher probability of moving up and right
             return self.A[np.random.choice(indices, 1, p=[0.35, 0.15, 0.35, 0.15])[0]]
             
-
 
     def _reached_goal(self, s):
         if s.shape[0] == 1:
@@ -63,6 +64,13 @@ class WindyGridworld():
             return self._wind_simple(s)
         else:
             return self._wind_simple(s)
+        
+    # def window_states(trajectory, W_s=5):
+    #     '''Replaces each state with the average value of previous W_s states including the current state, smoothing the trajectories.'''
+    #     i = len(trajectory)
+    #     window = trajectory[i - min(W_s, i):i]
+    #     s_hat = np.sum(window, axis=0)/len(window)
+    #     return s_hat
     
 
     def play(self, saveOnGoalReached=False, trajectories=[], rewards=[], unique_concepts=[], concepts=[], actions=[], s = np.array([-3, -3])):
@@ -76,11 +84,11 @@ class WindyGridworld():
         visited_concepts = []
         for _ in range(1, T):
             
-            action = self._policy(s)
+            action = self._policy(s, history)
             wind_value, concept = self._wind(s)
             s = s + alpha*action + beta*wind_value  # transition
 
-            history.append(s)
+            history.append(s) #append current state to history
             concept_history.append(concept)
             action_history.append(action)
             if concept not in visited_concepts:
@@ -109,4 +117,20 @@ class WindyGridworld():
         npz = np.load(filename, allow_pickle=True)
         print(npz.files)
         return npz['centroids'], npz['clusters'], npz['trajectories'], npz['rewards'], npz['unique_concepts'], npz['concepts'], npz['actions']
+    
+    
+    def plot_trajectory(self, history, means, clusters):
+        fig, ax = plt.subplots(figsize=(16,8))
+        plt.plot(history[:, 0], history[:, 1])
+        rect = patches.Rectangle([3, 3], 1, 1, fill=True, color="grey", alpha=0.5)
+        ax.add_patch(rect)
+
+        for i in range(len(means)):
+            start = i*100
+            end = (i+1)*100
+            plt.scatter(clusters[start:end,0], clusters[start:end,1], label=f"Cluster {i}")
+
+        plt.legend()
+        plt.title("Trajectory through Windy Gridworld")
+        plt.show()
         
