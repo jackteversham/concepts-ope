@@ -47,7 +47,7 @@ class WindyGridworld():
         
     
     def _default_behaviour_policy(self, s): #the policy used to generate the dataset
-            epsilon = 0
+            epsilon = self.policy_kwargs["epsilon"]
             dist_index = np.random.choice([0,1],1,p=[1-epsilon,epsilon])[0] #choose "optimal policy" or random policy in epsilon greedy fashion. 
             #Then how to define optimal policy conditioned on state? Can I adjust epsilon based on concepts? or wind?
             #Or, adjust optimal policy based on region in state space (with no knowledge of concept)
@@ -58,17 +58,18 @@ class WindyGridworld():
             return self.A[np.random.choice(indices, 1, p=p)[0]], p
     
     
-    def _default_evaluation_policy(self, s):
-            epsilon = 0.1
+    def _argmax_behaviour_policy(self, s):
+            epsilon = self.policy_kwargs["epsilon"]
             dist_index = np.random.choice([0,1],1,p=[1-epsilon,epsilon])[0] #choose "optimal policy" or random policy in epsilon greedy fashion. 
             #Then how to define optimal policy conditioned on state? Can I adjust epsilon based on concepts? or wind?
             #Or, adjust optimal policy based on region in state space (with no knowledge of concept)
             optimal_distribution = self._optimal_policy_by_region(s)
-            distributions = [optimal_distribution, [0.25, 0.25, 0.25, 0.25]]
-            p = distributions[dist_index]
-            indices = [0, 1, 2, 3] # up, down, right, left
-            return self.A[np.random.choice(indices, 1, p=p)[0]], p
-
+            if dist_index == 0:
+                return self.A[np.argmax(optimal_distribution)], optimal_distribution #should be returning [1,0,0,0] according to action_index here?
+            else:
+                indices = [0, 1, 2, 3] # up, down, right, left
+                return self.A[np.random.choice(indices, 1, p=optimal_distribution)[0]], optimal_distribution
+            
         
     def _optimal_policy_by_region(self, s):
             x,y = s[0], s[1]
@@ -79,7 +80,7 @@ class WindyGridworld():
             elif x > 1 and y > 1:
                 return [0.5, 0, 0.5, 0] #top right
             else:
-                return [0.15, 0.15, 0.7, 0] #top left
+                return [0.2, 0.2, 0.6, 0] #top left
         
     
     def _reached_goal(self, s):
