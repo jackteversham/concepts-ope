@@ -80,7 +80,7 @@ class WindyGridworld():
             elif x > 1 and y > 1:
                 return [0.5, 0, 0.5, 0] #top right
             else:
-                return [0.2, 0.2, 0.6, 0] #top left
+                return [0.2, 0.2, 0.6, 0] #top left. #NOTE the zeros here result in sometimes exploding estimates of the evaluation policy
         
     
     def _reached_goal(self, s):
@@ -116,7 +116,7 @@ class WindyGridworld():
     
 
     def play(self, saveOnGoalReached=False, trajectories=[], rewards=[], unique_concepts=[], concepts=[], actions=[], s = np.array([-3, -3])):
-        T = 500 #Maximum episode length
+        T = 500 #Maximum trajectory/episode length
         alpha = 0.08
         beta = 0.01
         history = []
@@ -175,6 +175,7 @@ class WindyGridworld():
         plt.legend()
         plt.title("Trajectory through Windy Gridworld")
         plt.show()
+
 
     
         
