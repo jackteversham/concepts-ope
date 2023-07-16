@@ -45,6 +45,31 @@ class WindyGridworld():
         else:
             return self._default_behaviour_policy(s)
         
+    def _eval_policy(self, s, history):
+        if self.policy_model is not None:
+            s = s.reshape((1,2))
+            if self.concept_model is not None:
+                s = self.concept_model(s) #predict on concept instead
+
+            epsilon=self.policy_kwargs["eval_epsilon"]
+            distribution = self.policy_model.predict(s)[0]
+            if s[0][0] < -1 and s[0][1] < -1:
+                option = np.random.choice([0,1],1,p=[1-epsilon,epsilon])[0]
+                if option == 1:
+                    distribution = self.policy_kwargs["eval_distribution"] 
+           
+            # action_index = np.argmax(distribution) #predict actions using pi_b using a greedy strategy
+            #NOTE: Consider here epsilon greedy: take argmax with probablilty epsilon, otherwise sample from the distribution
+            indices = [0, 1, 2, 3] # up, down, right, left
+            return self.A[np.random.choice(indices, 1, p=distribution)[0]], distribution
+            
+        elif self.custom_policy is not None:
+            return self.custom_policy(s, self.A, history, self.concept_model, *self.policy_args)
+
+        else:
+            return self._default_behaviour_policy(s)
+
+        
     
     def _default_behaviour_policy(self, s): #the policy used to generate the dataset
             epsilon = self.policy_kwargs["epsilon"]
@@ -115,7 +140,7 @@ class WindyGridworld():
         
     
 
-    def play(self, saveOnGoalReached=False, trajectories=[], rewards=[], unique_concepts=[], concepts=[], actions=[], s = np.array([-3, -3])):
+    def play(self, saveOnGoalReached=False, trajectories=[], rewards=[], unique_concepts=[], concepts=[], actions=[], s = np.array([-3, -3]), use_eval_policy=False):
         T = 500 #Maximum trajectory/episode length
         alpha = 0.08
         beta = 0.01
@@ -125,8 +150,9 @@ class WindyGridworld():
         reward = 0
         visited_concepts = []
         for _ in range(1, T):
-            
-            action, _ = self._policy(s, history)
+
+            policy = self._eval_policy if use_eval_policy else self._policy
+            action, _ = policy(s, history)
             wind_value, concept = self._wind(s)
             s = s + alpha*action + beta*wind_value  # transition
 
