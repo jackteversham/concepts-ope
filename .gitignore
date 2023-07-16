@@ -3,4 +3,3 @@
 *.pyc
 .vscode/
 *.icloud
-saved_data/dataset_epsilon_large.npz
