@@ -76,7 +76,7 @@ class WindyGridworld():
             dist_index = np.random.choice([0,1],1,p=[1-epsilon,epsilon])[0] #choose "optimal policy" or random policy in epsilon greedy fashion. 
             #Then how to define optimal policy conditioned on state? Can I adjust epsilon based on concepts? or wind?
             #Or, adjust optimal policy based on region in state space (with no knowledge of concept)
-            optimal_distribution = self._optimal_policy_by_region(s)
+            optimal_distribution = self._optimal_policy_by_region_more_concepts(s)
             distributions = [optimal_distribution, [0.25, 0.25, 0.25, 0.25]]
             p = distributions[dist_index]
             indices = [0, 1, 2, 3] # up, down, right, left
@@ -105,7 +105,18 @@ class WindyGridworld():
             elif x > 1 and y > 1:
                 return [0.5, 0, 0.5, 0] #top right
             else:
-                return [0.2, 0.2, 0.6, 0] #top left. #NOTE the zeros here result in sometimes exploding estimates of the evaluation policy
+                return [0.2, 0.2, 0.6, 0] #top left.
+            
+    def _optimal_policy_by_region_more_concepts(self, s):
+            x,y = s[0], s[1]
+            if x < 1 and y < 1: #origin 1,1
+                return [0.6, 0, 0.4, 0] #bottom left
+            elif x > 1 and y < 1:
+                return [0.75, 0, 0.25, 0] #bottom right
+            elif x > 1 and y > 1:
+                return [0.5, 0, 0.5, 0] #top right
+            else:
+                return [0.3, 0.2, 0.5, 0] #top left.
         
     
     def _reached_goal(self, s):
@@ -124,7 +135,7 @@ class WindyGridworld():
         return severities[assigned_cluster]*np.array([-1, -1]), assigned_cluster
 
     def _wind_knn(self, s):
-        severities = [0.1, 0.3, 0.5, 0.7, 0.9]  # Wind severity per cluster
+        severities = [0.2, 0.4, 0.6, 0.8, 1, 1.2, 1.4, 1.6, 1.8, 2.0]   # Wind severity per cluster (10 concepts)
         assigned_cluster = self.knn.predict(s.reshape(1,2))[0]
     
         return severities[assigned_cluster]*np.array([-1, -1]), assigned_cluster
