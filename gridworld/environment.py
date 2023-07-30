@@ -67,7 +67,7 @@ class WindyGridworld:
 
             epsilon = self.kwargs["eval_epsilon"]
             distribution = self.policy_model.predict(s)[0]
-            if s[0][0] < -1.5 and s[0][1] < -1:
+            if s[0][0] < -1 and s[0][1] > 1.5:
                 option = np.random.choice([0, 1], 1, p=[1 - epsilon, epsilon])[0]
                 if option == 1:
                     distribution = self.kwargs["eval_distribution"]
@@ -92,7 +92,7 @@ class WindyGridworld:
         ]  # choose "optimal policy" or random policy in epsilon greedy fashion.
         # Then how to define optimal policy conditioned on state? Can I adjust epsilon based on concepts? or wind?
         # Or, adjust optimal policy based on region in state space (with no knowledge of concept)
-        optimal_distribution = self._optimal_policy_by_region_3(s)
+        optimal_distribution = self._optimal_policy_by_region(s)
         distributions = [optimal_distribution, [0.25, 0.25, 0.25, 0.25]]
         p = distributions[dist_index]
         indices = [0, 1, 2, 3]  # up, down, right, left
@@ -100,9 +100,7 @@ class WindyGridworld:
 
     def _argmax_behaviour_policy(self, s):
         epsilon = self.kwargs["epsilon"]
-        dist_index = np.random.choice([0, 1], 1, p=[1 - epsilon, epsilon])[
-            0
-        ]  # choose "optimal policy" or random policy in epsilon greedy fashion.
+        dist_index = np.random.choice([0, 1], 1, p=[1 - epsilon, epsilon])[0]  # choose "optimal policy" or random policy in epsilon greedy fashion.
         # Then how to define optimal policy conditioned on state? Can I adjust epsilon based on concepts? or wind?
         # Or, adjust optimal policy based on region in state space (with no knowledge of concept)
         optimal_distribution = self._optimal_policy_by_region(s)
