@@ -87,9 +87,8 @@ class WindyGridworld:
         self, s, distribution
     ):  # the policy used to generate the dataset
         epsilon = self.kwargs["epsilon"]
-        dist_index = np.random.choice([0, 1], 1, p=[1 - epsilon, epsilon])[
-            0
-        ]  # choose "optimal policy" or random policy in epsilon greedy fashion.
+        dist_index = np.random.choice([0, 1], 1, p=[1 - epsilon, epsilon])[0]  
+        # choose "optimal policy" or random policy in epsilon greedy fashion.
         # Then how to define optimal policy conditioned on state? Can I adjust epsilon based on concepts? or wind?
         # Or, adjust optimal policy based on region in state space (with no knowledge of concept)
         optimal_distribution = self._optimal_policy_by_region(s)
