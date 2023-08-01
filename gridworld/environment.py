@@ -87,11 +87,14 @@ class WindyGridworld:
         self, s, distribution
     ):  # the policy used to generate the dataset
         epsilon = self.kwargs["epsilon"]
-        dist_index = np.random.choice([0, 1], 1, p=[1 - epsilon, epsilon])[0]  
+        dist_index = np.random.choice([0, 1], 1, p=[1 - epsilon, epsilon])[0]
         # choose "optimal policy" or random policy in epsilon greedy fashion.
         # Then how to define optimal policy conditioned on state? Can I adjust epsilon based on concepts? or wind?
         # Or, adjust optimal policy based on region in state space (with no knowledge of concept)
-        optimal_distribution = self._optimal_policy_by_region(s)
+        if self.num_concepts==5:
+            optimal_distribution = self._optimal_policy_by_region(s)
+        else:
+            optimal_distribution = self._optimal_policy_by_region_more_concepts(s)
         distributions = [optimal_distribution, [0.25, 0.25, 0.25, 0.25]]
         p = distributions[dist_index]
         indices = [0, 1, 2, 3]  # up, down, right, left
@@ -99,7 +102,9 @@ class WindyGridworld:
 
     def _argmax_behaviour_policy(self, s):
         epsilon = self.kwargs["epsilon"]
-        dist_index = np.random.choice([0, 1], 1, p=[1 - epsilon, epsilon])[0]  # choose "optimal policy" or random policy in epsilon greedy fashion.
+        dist_index = np.random.choice([0, 1], 1, p=[1 - epsilon, epsilon])[
+            0
+        ]  # choose "optimal policy" or random policy in epsilon greedy fashion.
         # Then how to define optimal policy conditioned on state? Can I adjust epsilon based on concepts? or wind?
         # Or, adjust optimal policy based on region in state space (with no knowledge of concept)
         optimal_distribution = self._optimal_policy_by_region(s)
@@ -141,35 +146,16 @@ class WindyGridworld:
         else:
             return [0.25, 0.15, 0.6, 0]  # top left.
 
-    def _optimal_policy_by_region_3( #corresponds to dataset dataset_epsilon_large_new
-        self, s
-    ):  # This was added for the second round of experiments to try get more trajectories through concept four
+    def _optimal_policy_by_region_more_concepts(self, s):  # original dataset generation
         x, y = s[0], s[1]
         if x < 1 and y < 1:  # origin 1,1
-            if x < -1.5:
-                return [0.7, 0, 0.25, 0.05]  # bottom left left
-            return [0.4, 0.05, 0.5, 0.05]  # bottom left right
+            return [0.7, 0, 0.3, 0]  # bottom left
         elif x > 1 and y < 1:
-            return [0.7, 0, 0.3, 0]  # bottom right
+            return [0.55, 0, 0.35, 0.1]  # bottom right
         elif x > 1 and y > 1:
             return [0.5, 0, 0.5, 0]  # top right
         else:
-            return [0.3, 0.1, 0.6, 0]  # top left.
-
-    def _optimal_policy_by_region_more_concepts(self, s, distribution):
-        x, y = s[0], s[1]
-        if x < 1 and y < 1:  # origin 1,1
-            if (
-                x < -1 and y < -1
-            ):  # This was added for new experiments, originally just returning [0.6, 0, 0.4, 0] below, as for the dataset "dataset_epsilon_more_concepts_{large}"
-                return distribution
-            return [0.6, 0, 0.4, 0]  # bottom left
-        elif x > 1 and y < 1:
-            return [0.75, 0, 0.25, 0]  # bottom right
-        elif x > 1 and y > 1:
-            return [0.5, 0, 0.5, 0]  # top right
-        else:
-            return [0.3, 0.2, 0.5, 0]  # top left.
+            return [0.2, 0.2, 0.6, 0]  # top left.
 
     def _reached_goal(self, s):
         if s.shape[0] == 1:
@@ -179,6 +165,8 @@ class WindyGridworld:
     def _wind_simple(self, s):
         # Different clusters experience different levels of wind
         severities = [0.2, 0.6, 1, 1.4, 1.8]  # Wind severity per cluster
+        if self.num_concepts == 10:
+            severities = [0.2,0.4,0.6,0.8,1,1.2,1.4,1.6,1.8,2.0,]
         distances = []
         for i in range(self.num_concepts):
             distances.append(np.linalg.norm(s - self.means[i]))
