@@ -166,7 +166,7 @@ class WindyGridworld:
         # Different clusters experience different levels of wind
         severities = [0.2, 0.6, 1, 1.4, 1.8]  # Wind severity per cluster
         if self.num_concepts == 10:
-            severities = [0.2,0.4,0.6,0.8,1,1.2,1.4,1.6,1.8,2.0,]
+            severities = [0.2,0.4,0.6,0.8,1,1.2,1.4,1.6,1.8,2.0]
         distances = []
         for i in range(self.num_concepts):
             distances.append(np.linalg.norm(s - self.means[i]))
