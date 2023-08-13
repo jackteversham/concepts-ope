@@ -11,7 +11,9 @@ class PolicyModel():
         model = Sequential()
         model.add(Dense(64, activation="relu", input_shape=self.input_size))
         model.add(Dense(128, activation="relu"))
-        model.add(Dense(self.output_size, activation="softmax"))
+
+        activation = "softmax" if self.loss == "categorical_crossentropy" else "linear"
+        model.add(Dense(self.output_size, activation=activation))
 
         metric = "mse" if self.loss == "mse" else "categorical_accuracy"
 
