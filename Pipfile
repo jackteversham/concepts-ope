@@ -7,7 +7,14 @@ name = "pypi"
 numpy = "*"
 tensorflow = "*"
 matplotlib = "*"
-sklearn = "*"
+scikit-learn = "*"
 tqdm = "*"
 pandas = "*"
 keras = "*"
+autograd = "*"
+ipywidgets = "*"
+pyarrow = "*"
+fastparquet = "*"
+
+[requires]
+python=3.8

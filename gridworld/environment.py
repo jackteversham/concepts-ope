@@ -19,7 +19,7 @@ class WindyGridworld:
         knn,
         means,
         policy_model=None,
-        custom_policy=None,
+        custom_eval_policy=None,
         concept_model=None,
         *args,
         **kwargs,
@@ -29,13 +29,17 @@ class WindyGridworld:
         self.knn = knn  # A knn predictor already trained
         self.means = means
         self.policy_model = policy_model
-        self.custom_policy = custom_policy
+        self.custom_eval_policy = custom_eval_policy
         self.concept_model = concept_model
         self.args = args
         self.kwargs = kwargs
 
     def _policy(self, s, history, distribution):
-        if self.policy_model is not None:
+        if self.custom_eval_policy is not None:
+            #must reurn an action and a distribution
+            return self.custom_eval_policy(s, self.A, history, self.concept_model, self.policy_model, self.kwargs)
+
+        elif self.policy_model is not None:
             s = s.reshape((1, 2))
             if self.concept_model is not None:
                 s = self.concept_model(s)  # predict on concept instead
@@ -50,12 +54,7 @@ class WindyGridworld:
             # NOTE: Consider here epsilon greedy: take argmax with probablilty epsilon, otherwise sample from the distribution
             indices = [0, 1, 2, 3]  # up, down, right, left
             return self.A[np.random.choice(indices, 1, p=distribution)[0]], distribution
-
-        elif self.custom_policy is not None:
-            return self.custom_policy(
-                s, self.A, history, self.concept_model, *self.args
-            )
-
+       
         else:
             return self._default_behaviour_policy(s, distribution)
 
@@ -75,13 +74,13 @@ class WindyGridworld:
             indices = [0, 1, 2, 3]  # up, down, right, left
             return self.A[np.random.choice(indices, 1, p=distribution)[0]], distribution
 
-        elif self.custom_policy is not None:
-            return self.custom_policy(
+        elif self.custom_eval_policy is not None:
+            return self.custom_eval_policy(
                 s, self.A, history, self.concept_model, *self.args
             )
 
         else:
-            return self._default_behaviour_policy(s)
+            return self._default_behaviour_policy(s, distribution)
 
     def _default_behaviour_policy(
         self, s, distribution
@@ -163,6 +162,9 @@ class WindyGridworld:
         return s[0] >= 3 and s[0] <= 4 and s[1] >= 3 and s[1] <= 4
 
     def _wind_simple(self, s):
+        # Wind is defined only by state and position of dataset random concept centers. 
+        # These same wind regions can be used for evaluating new concepts, and should be since 
+        # this is how the dataset was generated
         # Different clusters experience different levels of wind
         severities = [0.2, 0.6, 1, 1.4, 1.8]  # Wind severity per cluster
         if self.num_concepts == 10:
@@ -172,7 +174,7 @@ class WindyGridworld:
             distances.append(np.linalg.norm(s - self.means[i]))
         assigned_cluster = np.argmin(distances)
         return severities[assigned_cluster] * np.array([-1, -1]), assigned_cluster
-
+    
     def _wind_knn(self, s):
         severities = [
             0.2,
